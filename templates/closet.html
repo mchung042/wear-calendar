@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Closet · Wear Calendar{% endblock %}
+{% block content %}
+{% if welcome %}
+<p class="flash">Welcome — add clothing to your closet (type, photo, name), then drag them onto the calendar.</p>
+{% endif %}
+{% if error == 'required' %}
+<p class="flash">Type and name are required.</p>
+{% endif %}
+<section class="card">
+  <h1>My Closet</h1>
+  <p class="muted">Type on top, photo in the middle, details in the name (brand, color, size…).</p>
+  <form method="post" action="/closet" enctype="multipart/form-data" class="closet-form">
+    <div>
+      <label for="type">Type</label>
+      <select id="type" name="type" required>
+        <option value="" disabled selected>Select type</option>
+        {% for t in clothing_types %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="photo">Photo</label>
+      <input id="photo" type="file" name="photo" accept="image/*" />
+    </div>
+    <div>
+      <label for="name">Name / details</label>
+      <input id="name" type="text" name="name" placeholder="Uniqlo oxford · blue · M" required />
+    </div>
+    <button class="btn primary" type="submit">Add to closet</button>
+  </form>
+</section>
+<section class="card">
+  <div class="closet-manage-grid">
+    {% for item in closet %}
+      <article class="garment-card garment-md">
+        <div class="garment-type">{{ item.type or 'Clothing' }}</div>
+        <div class="garment-photo">
+          {% if item.photo_path %}
+            <img src="/uploads/{{ item.photo_path }}" alt="{{ item.name }}" />
+          {% else %}
+            <div class="photo-ph">{{ (item.type or '?')[:1] }}</div>
+          {% endif %}
+        </div>
+        <div class="garment-name">{{ item.name }}</div>
+        <div class="row" style="margin-top:.5rem;justify-content:space-between;width:100%">
+          <a href="/closet/{{ item.id }}/edit">Edit</a>
+          <a href="/closet/{{ item.id }}">Details</a>
+          <form method="post" action="/closet/{{ item.id }}/delete">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">Your closet is empty.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} · Wear Calendar{% endblock %}
+{% block content %}
+<section class="card">
+  <p><a href="/closet">← Closet</a></p>
+  <h1>{{ item.type or 'Clothing' }}</h1>
+  <p class="muted">{{ item.name }}</p>
+  {% if item.photo_path %}
+  <div class="garment-photo" style="max-width:220px;aspect-ratio:1;margin:1rem 0">
+    <img src="/uploads/{{ item.photo_path }}" alt="{{ item.name }}" />
+  </div>
+  {% endif %}
+  <p class="badge">Wears since last wash: {{ wears_since_wash }}</p>
+  <div class="row">
+    <a class="btn" href="/closet/{{ item.id }}/edit">Edit</a>
+    <form method="post" action="/closet/{{ item.id }}/wash">
+      <button class="btn primary" type="submit">Mark washed</button>
+    </form>
+  </div>
+</section>
+<section class="card">
+  <h2>Wear counts</h2>
+  <ul class="list">
+    <li><span>Last 7 days</span><strong>{{ c7 }}</strong></li>
+    <li><span>Last 14 days</span><strong>{{ c14 }}</strong></li>
+    <li><span>Last 30 days</span><strong>{{ c30 }}</strong></li>
+  </ul>
+</section>
+<section class="card">
+  <h2>Wear history</h2>
+  <ul class="list">
+    {% for h in history %}
+      <li>
+        <span>{{ h.worn_on }}</span>
+        <form method="post" action="/wear/{{ h.id }}/delete">
+          <button class="btn danger" type="submit">Remove</button>
+        </form>
+      </li>
+    {% else %}
+      <li class="muted">No wears logged yet.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

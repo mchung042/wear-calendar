@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Items · Wear Calendar{% endblock %}
+{% block content %}
+{% if welcome %}
+<p class="flash">Welcome — add a few pieces you wear often, then log today on the calendar.</p>
+{% endif %}
+<section class="card">
+  <h1>Your items</h1>
+  <p class="muted">Name-only is enough. Photos can come later.</p>
+  <form method="post" action="/items" class="row">
+    <div>
+      <label for="name">Name</label>
+      <input id="name" type="text" name="name" placeholder="Blue oxford shirt" required />
+    </div>
+    <div>
+      <label for="type">Type (optional)</label>
+      <input id="type" type="text" name="type" placeholder="shirt" />
+    </div>
+    <button class="btn primary" type="submit">Add item</button>
+  </form>
+</section>
+<section class="card">
+  <ul class="list">
+    {% for item in items %}
+      <li>
+        <a href="/items/{{ item.id }}"><strong>{{ item.name }}</strong>{% if item.type %} · {{ item.type }}{% endif %}</a>
+        <form method="post" action="/items/{{ item.id }}/delete">
+          <button class="btn danger" type="submit">Delete</button>
+        </form>
+      </li>
+    {% else %}
+      <li class="muted">No items yet.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

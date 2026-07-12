@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Wear Calendar{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,650;1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css?v=month-equal-rows-3" />
+</head>
+<body>
+  <div class="shell {% block shell_class %}{% endblock %}">
+    <header class="topbar">
+      <a class="brand" href="/calendar">Wear Calendar</a>
+      {% if user_email %}
+      <nav class="nav">
+        <a href="/calendar" class="{% if request.url.path.startswith('/calendar') %}active{% endif %}">Calendar</a>
+        <a href="/closet" class="{% if request.url.path.startswith('/closet') or request.url.path.startswith('/items') %}active{% endif %}">Closet</a>
+        <a href="/most-worn" class="{% if request.url.path.startswith('/most-worn') %}active{% endif %}">Most worn</a>
+        <span class="muted">{{ user_email }}</span>
+        <form method="post" action="/logout" style="display:inline">
+          <button class="btn" type="submit">Log out</button>
+        </form>
+      </nav>
+      {% endif %}
+    </header>
+    {% block content %}{% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

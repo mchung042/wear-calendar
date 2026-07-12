@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Most worn · Wear Calendar{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Most worn</h1>
+  <div class="nav" style="margin-bottom:1rem">
+    <a href="/most-worn?days=7" class="{% if days==7 %}active{% endif %}">7 days</a>
+    <a href="/most-worn?days=14" class="{% if days==14 %}active{% endif %}">14 days</a>
+    <a href="/most-worn?days=30" class="{% if days==30 %}active{% endif %}">30 days</a>
+  </div>
+  <ul class="list">
+    {% for row in rows %}
+      <li>
+        <a href="/items/{{ row.id }}"><strong>{{ row.name }}</strong>{% if row.type %} · {{ row.type }}{% endif %}</a>
+        <strong>{{ row.wear_count }}</strong>
+      </li>
+    {% else %}
+      <li class="muted">No wears in this range yet.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

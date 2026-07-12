@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Calendar · Wear Calendar{% endblock %}
+{% block shell_class %}shell-wide{% endblock %}
+{% block content %}
+<div class="cal-layout">
+  <section class="card cal-main">
+    <div class="row" style="justify-content:space-between;width:100%">
+      <div>
+        <h1>
+          {% if view == 'month' %}
+            {{ anchor.strftime('%B %Y') }}
+          {% elif week_offset == 0 %}
+            This week
+          {% elif week_offset == -1 %}
+            Last week
+          {% else %}
+            Week of {{ start.strftime('%b %d') }}
+          {% endif %}
+        </h1>
+        <p class="muted">Drag clothing from My Closet onto any day — including past days you forgot to log.</p>
+      </div>
+      <div class="nav">
+        <a href="/calendar?view=week&week_offset={{ week_offset - 1 }}" class="{% if view=='week' %}{% endif %}">←</a>
+        <a href="/calendar?view=week" class="{% if view=='week' %}active{% endif %}">Week</a>
+        <a href="/calendar?view=week&week_offset={{ week_offset + 1 }}">→</a>
+        <a href="/calendar?view=month" class="{% if view=='month' %}active{% endif %}">Month</a>
+        {% if view=='month' %}
+          <a href="/calendar?view=month&ym={{ prev_m }}">←</a>
+          <a href="/calendar?view=month&ym={{ next_m }}">→</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="cal-grid {% if view == 'month' %}cal-grid-month{% endif %}" style="margin-top:1rem">
+      {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+        <div class="cal-head">{{ d }}</div>
+      {% endfor %}
+      {% if view == 'week' %}
+        {% for day in week_days %}
+          {% set key = day.isoformat() %}
+          <div class="day drop-day {% if key == today %}today{% endif %}" data-date="{{ key }}">
+            <div class="n">{{ day.strftime('%b %d') }}</div>
+            <div class="day-garments">
+              {% for w in by_day.get(key, []) %}
+                <article class="garment-card garment-sm on-day">
+                  <form method="post" action="/wear/{{ w.wear_id }}/delete" class="garment-remove">
+                    <button type="submit" title="Remove" aria-label="Remove">×</button>
+                  </form>
+                  <div class="garment-type">{{ w.type or 'Clothing' }}</div>
+                  <div class="garment-photo">
+                    {% if w.photo_path %}
+                      <img src="/uploads/{{ w.photo_path }}" alt="{{ w.name }}" />
+                    {% else %}
+                      <div class="photo-ph">{{ (w.type or '?')[:1] }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="garment-name">{{ w.name }}</div>
+                </article>
+              {% else %}
+                <span class="muted day-empty-hint">Drop here</span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        {% for week in weeks %}
+          {% for daynum in week %}
+            {% if daynum == 0 %}
+              <div class="day empty"></div>
+            {% else %}
+              {% set day = anchor.replace(day=daynum) %}
+              {% set key = day.isoformat() %}
+              <div class="day drop-day month-day {% if key == today %}today{% endif %}" data-date="{{ key }}">
+                <div class="n">{{ daynum }}</div>
+                <div class="day-garments day-garments-tiny">
+                  {% for w in by_day.get(key, []) %}
+                    <article class="garment-tiny" title="{{ w.type }} — {{ w.name }}">
+                      <form method="post" action="/wear/{{ w.wear_id }}/delete" class="garment-remove">
+                        <button type="submit" title="Remove" aria-label="Remove">×</button>
+                      </form>
+                      {% if w.photo_path %}
+                        <img src="/uploads/{{ w.photo_path }}" alt="{{ w.name }}" />
+                      {% else %}
+                        <span class="tiny-ph">{{ (w.type or '?')[:1] }}</span>
+                      {% endif %}
+                    </article>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </section>
+
+  <aside class="card closet-panel" id="my-closet">
+    <h2>My Closet</h2>
+    <p class="muted">Drag onto any day. Layering allowed.</p>
+    {% if not closet %}
+      <p class="flash">No clothing yet — <a href="/closet">add to your closet</a>.</p>
+    {% else %}
+      <div class="closet-grid">
+        {% for item in closet %}
+          <article class="garment-card garment-md" draggable="true" data-item-id="{{ item.id }}">
+            <div class="garment-type">{{ item.type or 'Clothing' }}</div>
+            <div class="garment-photo">
+              {% if item.photo_path %}
+                <img src="/uploads/{{ item.photo_path }}" alt="{{ item.name }}" />
+              {% else %}
+                <div class="photo-ph">{{ (item.type or '?')[:1] }}</div>
+              {% endif %}
+            </div>
+            <div class="garment-name">{{ item.name }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <p style="margin-top:1rem"><a class="btn" href="/closet">Manage closet</a></p>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/calendar-dnd.js"></script>
+{% endblock %}
