@@ -115,7 +115,8 @@ def render(request: Request, name: str, **ctx):
     ctx.setdefault("user_email", request.session.get("email"))
     ctx.setdefault("feature_on", FEATURE_ON)
     ctx.setdefault("clothing_types", CLOTHING_TYPES)
-    return templates.TemplateResponse(name, {"request": request, **ctx})
+    # Starlette 1.0+: request must be the first arg (old name-first API 500s)
+    return templates.TemplateResponse(request, name, ctx)
 
 
 async def save_upload(photo: Optional[UploadFile]) -> Optional[str]:
