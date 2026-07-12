@@ -2,24 +2,15 @@
 {% block title %}Closet · Wear Calendar{% endblock %}
 {% block content %}
 {% if welcome %}
-<p class="flash">Welcome — add clothing to your closet (type, photo, name), then drag them onto the calendar.</p>
+<p class="flash">Welcome — add clothing to your closet (photo, type, name), then drag them onto the calendar.</p>
 {% endif %}
 {% if error == 'required' %}
 <p class="flash">Type and name are required.</p>
 {% endif %}
 <section class="card">
   <h1>My Closet</h1>
-  <p class="muted">Type on top, photo in the middle, details in the name (brand, color, size…).</p>
+  <p class="muted">Photo first — we’ll suggest the type. Add name details (brand, color, size…).</p>
   <form method="post" action="/closet" enctype="multipart/form-data" class="closet-form">
-    <div>
-      <label for="type">Type</label>
-      <select id="type" name="type" required>
-        <option value="" disabled selected>Select type</option>
-        {% for t in clothing_types %}
-          <option value="{{ t }}">{{ t }}</option>
-        {% endfor %}
-      </select>
-    </div>
     <div class="photo-capture" data-photo-capture>
       <span class="photo-capture-label">Photo</span>
       <div class="photo-capture-preview" data-preview hidden>
@@ -44,6 +35,17 @@
           </div>
         </div>
       </div>
+    </div>
+    <div>
+      <label for="type">Type</label>
+      <select id="type" name="type" required data-type-select>
+        <option value="" disabled selected>Select type</option>
+        {% for t in clothing_types %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+      <p class="type-suggest-status muted" data-type-status hidden></p>
+      <input type="hidden" name="suggested_type" value="" data-suggested-type />
     </div>
     <div>
       <label for="name">Name / details</label>
@@ -80,5 +82,5 @@
 </section>
 {% endblock %}
 {% block scripts %}
-<script src="/static/photo-capture.js?v=1"></script>
+<script src="/static/photo-capture.js?v=2"></script>
 {% endblock %}

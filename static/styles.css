@@ -307,6 +307,16 @@ input:focus {
   gap: .5rem;
 }
 
+.type-suggest-status {
+  margin: .35rem 0 0;
+  font-size: .85rem;
+  min-height: 1.2em;
+}
+.type-suggest-status.is-error {
+  color: var(--forest);
+  opacity: .85;
+}
+
 .garment-card {
   position: relative;
   display: flex;

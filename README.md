@@ -16,7 +16,10 @@ Open http://127.0.0.1:8000
 ## Railway
 
 1. New project → deploy this GitHub repo (root = repo root, no subdirectory).
-2. Variables: `SESSION_SECRET` (required), `ALLOW_SIGNUPS=1`
+2. Variables:
+   - `SESSION_SECRET` (required)
+   - `ALLOW_SIGNUPS=1`
+   - `OPENAI_API_KEY` (optional — enables auto clothing-type from photos)
 3. Volume mounted at `/data`
 4. Generate a public domain
 

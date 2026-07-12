@@ -29,4 +29,5 @@
 ## Status
 
 - **Wave 1 (in-app camera):** shipped US-1 on closet add + edit (Take photo / Choose photo + desktop webcam).
+- **Wave 2 (auto type):** shipped — suggests type from photo via OpenAI vision when `OPENAI_API_KEY` is set; user can override; accept/override tracked.
 

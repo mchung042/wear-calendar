@@ -15,6 +15,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 import db
+import classify
 
 BASE = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("WEAR_DATA_DIR", BASE / "data"))
@@ -22,6 +23,7 @@ UPLOAD_DIR = DATA_DIR / "uploads"
 FEATURE_ON = os.environ.get("FEATURE_WEAR_CALENDAR", "1") != "0"
 ALLOW_SIGNUPS = os.environ.get("ALLOW_SIGNUPS", "1") != "0"
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "dev-only-change-me")
+MAX_CLASSIFY_BYTES = 8 * 1024 * 1024
 # Secure cookies on Railway / HTTPS hosts
 _SESSION_HTTPS = os.environ.get("SESSION_HTTPS", "").lower() in {"1", "true", "yes"} or bool(
     os.environ.get("RAILWAY_ENVIRONMENT")
@@ -145,6 +147,40 @@ async def save_upload(photo: Optional[UploadFile]) -> Optional[str]:
 def _photo_source(raw: Optional[str]) -> str:
     v = (raw or "").strip().lower()
     return v if v in {"camera", "library"} else ""
+
+
+def _suggestion_props(type_: str, suggested_type: Optional[str]) -> str:
+    suggested = (suggested_type or "").strip()
+    if not suggested:
+        return "suggestion=none"
+    if suggested == type_.strip():
+        return f"suggestion=accepted&suggested={suggested}"
+    return f"suggestion=overridden&suggested={suggested}&final={type_.strip()}"
+
+
+@app.get("/api/classify-clothing/status")
+def classify_status(request: Request):
+    require_user(request)
+    return {"enabled": classify.is_enabled()}
+
+
+@app.post("/api/classify-clothing")
+async def classify_clothing_api(request: Request, photo: UploadFile = File(...)):
+    uid = require_user(request)
+    if not classify.is_enabled():
+        return JSONResponse({"type": None, "disabled": True}, status_code=503)
+    data = await photo.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_photo")
+    if len(data) > MAX_CLASSIFY_BYTES:
+        raise HTTPException(status_code=400, detail="photo_too_large")
+    label = classify.classify_clothing(data, photo.content_type or "image/jpeg", CLOTHING_TYPES)
+    db.track_event(
+        uid,
+        "type_suggest",
+        f"ok={1 if label else 0}&type={label or ''}",
+    )
+    return {"type": label, "disabled": False}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -315,13 +351,21 @@ async def closet_create(
     type: str = Form(...),
     photo: Optional[UploadFile] = File(None),
     photo_source: Optional[str] = Form(None),
+    suggested_type: Optional[str] = Form(None),
 ):
     uid = require_user(request)
     if not name.strip() or not type.strip():
         return RedirectResponse("/closet?error=required", status_code=303)
     photo_name = await save_upload(photo)
     source = _photo_source(photo_source) if photo_name else ""
-    db.create_item(uid, name, type, photo_name, photo_source=source)
+    db.create_item(
+        uid,
+        name,
+        type,
+        photo_name,
+        photo_source=source,
+        suggestion=_suggestion_props(type, suggested_type),
+    )
     return RedirectResponse("/closet", status_code=303)
 
 
@@ -356,6 +400,7 @@ async def closet_edit_save(
     photo: Optional[UploadFile] = File(None),
     remove_photo: Optional[str] = Form(None),
     photo_source: Optional[str] = Form(None),
+    suggested_type: Optional[str] = Form(None),
 ):
     uid = require_user(request)
     item = db.get_item(uid, item_id)
@@ -380,6 +425,7 @@ async def closet_edit_save(
         photo_path=new_photo,
         clear_photo=clear and not new_photo,
         photo_source=source,
+        suggestion=_suggestion_props(type, suggested_type) if new_photo else "",
     )
     if ok and (new_photo or clear) and old_photo:
         path = UPLOAD_DIR / old_photo

@@ -2,7 +2,7 @@
  * In-app photo capture for closet add/edit.
  * - Take photo: mobile capture=environment, or desktop webcam modal
  * - Choose photo: standard library picker
- * Syncs a single <input name="photo"> for multipart submit.
+ * - After a photo is set, asks the server to suggest clothing type
  */
 (function () {
   function isLikelyMobile() {
@@ -35,6 +35,106 @@
     img.dataset.objectUrl = url;
     img.src = url;
     preview.hidden = false;
+  }
+
+  function setSuggestStatus(form, text, isError) {
+    const el = form && form.querySelector("[data-type-status]");
+    if (!el) return;
+    el.hidden = !text;
+    el.textContent = text || "";
+    el.classList.toggle("is-error", !!isError);
+  }
+
+  function clearSuggestion(form) {
+    if (!form) return;
+    const suggested = form.querySelector("[data-suggested-type]");
+    if (suggested) suggested.value = "";
+    setSuggestStatus(form, "");
+  }
+
+  function resizeForClassify(file) {
+    return new Promise((resolve) => {
+      if (!file || !file.type || !file.type.startsWith("image/")) {
+        resolve(file);
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 1024;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        const scale = Math.min(1, max / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            resolve(new File([blob], "classify.jpg", { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  }
+
+  let classifySeq = 0;
+
+  async function suggestType(form, file) {
+    if (!form || !file) return;
+    const typeSelect = form.querySelector("[data-type-select]");
+    const suggestedInput = form.querySelector("[data-suggested-type]");
+    if (!typeSelect) return;
+
+    const seq = ++classifySeq;
+    setSuggestStatus(form, "Detecting type from photo…");
+
+    try {
+      const resized = await resizeForClassify(file);
+      const body = new FormData();
+      body.append("photo", resized, resized.name || "photo.jpg");
+      const res = await fetch("/api/classify-clothing", {
+        method: "POST",
+        body,
+        credentials: "same-origin",
+      });
+      if (seq !== classifySeq) return;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 503 || data.disabled) {
+          setSuggestStatus(form, "Auto-detect off — pick a type (add OPENAI_API_KEY to enable).", true);
+        } else {
+          setSuggestStatus(form, "Couldn’t detect type — pick one.", true);
+        }
+        return;
+      }
+      const label = data.type;
+      if (!label) {
+        setSuggestStatus(form, "Couldn’t detect type — pick one.", true);
+        return;
+      }
+      if (suggestedInput) suggestedInput.value = label;
+      typeSelect.value = label;
+      typeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      setSuggestStatus(form, "Suggested from photo: " + label + " — change if wrong.");
+    } catch (e) {
+      if (seq !== classifySeq) return;
+      setSuggestStatus(form, "Couldn’t detect type — pick one.", true);
+    }
   }
 
   function openWebcam(root, fileInput, sourceInput) {
@@ -125,6 +225,7 @@
   }
 
   function init(root) {
+    const form = root.closest("form");
     const fileInput = root.querySelector("[data-photo-input]");
     const cameraInput = root.querySelector("[data-camera-input]");
     const sourceInput = root.querySelector("[data-photo-source]");
@@ -179,10 +280,16 @@
         sourceInput.value = "library";
       }
       showPreview(root, file || null);
+      if (file) {
+        suggestType(form, file);
+      } else {
+        clearSuggestion(form);
+      }
     });
 
     clearBtn &&
       clearBtn.addEventListener("click", () => {
+        classifySeq += 1;
         fileInput.value = "";
         if (cameraInput) cameraInput.value = "";
         if (sourceInput) {
@@ -190,6 +297,7 @@
           delete sourceInput.dataset.from;
         }
         showPreview(root, null);
+        clearSuggestion(form);
       });
   }
 
