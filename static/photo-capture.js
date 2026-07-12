@@ -93,9 +93,12 @@
   }
 
   let classifySeq = 0;
+  // Keep suggestType implemented, but do not call it until FEATURE_TYPE_SUGGEST is on
+  // (server also gates /api/classify-clothing). Flip to true to re-enable client calls.
+  const TYPE_SUGGEST_CLIENT = false;
 
   async function suggestType(form, file) {
-    if (!form || !file) return;
+    if (!TYPE_SUGGEST_CLIENT || !form || !file) return;
     const typeSelect = form.querySelector("[data-type-select]");
     const suggestedInput = form.querySelector("[data-suggested-type]");
     if (!typeSelect) return;
@@ -281,7 +284,7 @@
       }
       showPreview(root, file || null);
       if (file) {
-        suggestType(form, file);
+        if (TYPE_SUGGEST_CLIENT) suggestType(form, file);
       } else {
         clearSuggestion(form);
       }

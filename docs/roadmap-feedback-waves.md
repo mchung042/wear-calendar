@@ -29,5 +29,6 @@
 ## Status
 
 - **Wave 1 (in-app camera):** shipped US-1 on closet add + edit (Take photo / Choose photo + desktop webcam).
-- **Wave 2 (auto type):** shipped — suggests type from photo via OpenAI vision when `OPENAI_API_KEY` is set; user can override; accept/override tracked.
+- **Wave 2 (auto type):** implemented but **off by default** (`FEATURE_TYPE_SUGGEST=0`, client `TYPE_SUGGEST_CLIENT=false`). Re-enable later with key + flag.
+- **Wave 3 (design):** shipped — Atelier visual system (Syne + Figtree, cool canvas, teal accent, underline nav).
 

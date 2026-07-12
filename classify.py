@@ -11,10 +11,17 @@ from typing import Optional, Sequence
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL = os.environ.get("OPENAI_VISION_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+# Off by default — set FEATURE_TYPE_SUGGEST=1 and OPENAI_API_KEY to enable.
+FEATURE_TYPE_SUGGEST = os.environ.get("FEATURE_TYPE_SUGGEST", "0").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 
 def is_enabled() -> bool:
-    return bool(OPENAI_API_KEY)
+    return FEATURE_TYPE_SUGGEST and bool(OPENAI_API_KEY)
 
 
 def _normalize(label: str, allowed: Sequence[str]) -> Optional[str]:

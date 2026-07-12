@@ -19,7 +19,7 @@ Open http://127.0.0.1:8000
 2. Variables:
    - `SESSION_SECRET` (required)
    - `ALLOW_SIGNUPS=1`
-   - `OPENAI_API_KEY` (optional — enables auto clothing-type from photos)
+   - `OPENAI_API_KEY` + `FEATURE_TYPE_SUGGEST=1` (optional — auto clothing-type from photos; off by default)
 3. Volume mounted at `/data`
 4. Generate a public domain
 

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ mode|capitalize }} · Wear Calendar{% endblock %}
 {% block content %}
-<section class="card" style="max-width:420px;margin:2rem auto">
-  <h1>{% if mode == 'signup' %}Create account{% else %}Log in{% endif %}</h1>
-  <p class="muted">Private closet. Your wear history stays yours.</p>
+<section class="card auth-panel">
+  <h1>{% if mode == 'signup' %}Create account{% else %}Welcome back{% endif %}</h1>
+  <p class="muted">Your closet and wear history stay private.</p>
   {% if error %}<p class="badge">{{ error }}</p>{% endif %}
   <form method="post" action="/{{ mode }}">
     <label for="email">Email</label>
@@ -14,7 +14,7 @@
       <button class="btn primary" type="submit">{% if mode == 'signup' %}Sign up{% else %}Log in{% endif %}</button>
     </div>
   </form>
-  <p class="muted" style="margin-top:1rem">
+  <p class="muted" style="margin-top:1.15rem">
     {% if mode == 'signup' %}
       Have an account? <a href="/login">Log in</a>
     {% else %}

@@ -9,7 +9,7 @@
 {% endif %}
 <section class="card">
   <h1>My Closet</h1>
-  <p class="muted">Photo first — we’ll suggest the type. Add name details (brand, color, size…).</p>
+  <p class="muted">Photo, type, and name (brand, color, size…). Drag pieces onto the calendar when you’re done.</p>
   <form method="post" action="/closet" enctype="multipart/form-data" class="closet-form">
     <div class="photo-capture" data-photo-capture>
       <span class="photo-capture-label">Photo</span>
@@ -82,5 +82,5 @@
 </section>
 {% endblock %}
 {% block scripts %}
-<script src="/static/photo-capture.js?v=2"></script>
+<script src="/static/photo-capture.js?v=3"></script>
 {% endblock %}
