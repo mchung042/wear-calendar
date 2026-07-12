@@ -131,6 +131,7 @@ def create_item(
     name: str,
     type_: str,
     photo_path: Optional[str] = None,
+    photo_source: str = "",
 ) -> int:
     with connect() as conn:
         cur = conn.execute(
@@ -146,11 +147,12 @@ def create_item(
                 datetime.utcnow().isoformat(),
             ),
         )
+        src = f"&photo_source={photo_source}" if photo_source else ""
         track(
             conn,
             "item_create",
             user_id,
-            f"has_photo={1 if photo_path else 0}&type={type_.strip()}",
+            f"has_photo={1 if photo_path else 0}&type={type_.strip()}{src}",
         )
         return int(cur.lastrowid)
 
@@ -162,6 +164,7 @@ def update_item(
     type_: str,
     photo_path: Optional[str] = None,
     clear_photo: bool = False,
+    photo_source: str = "",
 ) -> bool:
     with connect() as conn:
         item = conn.execute(
@@ -182,6 +185,14 @@ def update_item(
             """,
             (name.strip(), type_.strip(), new_photo, item_id, user_id),
         )
+        if photo_path:
+            src = f"&photo_source={photo_source}" if photo_source else ""
+            track(
+                conn,
+                "item_photo_update",
+                user_id,
+                f"item_id={item_id}{src}",
+            )
         return cur.rowcount > 0
 
 

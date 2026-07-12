@@ -20,9 +20,30 @@
         {% endfor %}
       </select>
     </div>
-    <div>
-      <label for="photo">Photo</label>
-      <input id="photo" type="file" name="photo" accept="image/*" />
+    <div class="photo-capture" data-photo-capture>
+      <span class="photo-capture-label">Photo</span>
+      <div class="photo-capture-preview" data-preview hidden>
+        <img data-preview-img alt="Selected clothing" />
+        <button type="button" class="btn" data-clear>Clear</button>
+      </div>
+      <div class="photo-capture-actions">
+        <button type="button" class="btn primary" data-take>Take photo</button>
+        <button type="button" class="btn" data-library>Choose photo</button>
+      </div>
+      <p class="muted photo-capture-hint">Use your camera in the app, or pick from your library.</p>
+      <input type="file" name="photo" accept="image/*" data-photo-input class="sr-only" tabindex="-1" />
+      <input type="file" accept="image/*" capture="environment" data-camera-input class="sr-only" tabindex="-1" />
+      <input type="hidden" name="photo_source" value="" data-photo-source />
+      <div class="webcam-modal" data-webcam-modal hidden>
+        <div class="webcam-sheet" role="dialog" aria-label="Take photo">
+          <video data-webcam-video playsinline autoplay muted></video>
+          <p class="flash" data-webcam-error hidden></p>
+          <div class="row webcam-actions">
+            <button type="button" class="btn primary" data-webcam-snap>Capture</button>
+            <button type="button" class="btn" data-webcam-cancel>Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div>
       <label for="name">Name / details</label>
@@ -57,4 +78,7 @@
     {% endfor %}
   </div>
 </section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/photo-capture.js?v=1"></script>
 {% endblock %}

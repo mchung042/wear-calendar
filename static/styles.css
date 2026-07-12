@@ -231,6 +231,82 @@ input:focus {
   font-size: 1rem;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.photo-capture {
+  display: grid;
+  gap: .55rem;
+}
+.photo-capture-label {
+  font-weight: 600;
+  color: var(--forest);
+}
+.photo-capture-hint {
+  margin: 0;
+  font-size: .85rem;
+}
+.photo-capture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.photo-capture-preview {
+  display: grid;
+  gap: .45rem;
+  justify-items: start;
+}
+.photo-capture-preview img {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: .6rem;
+  border: 1px solid var(--pastel-gray);
+  background: var(--pastel-gray-soft);
+}
+
+.webcam-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(45, 58, 48, 0.55);
+}
+.webcam-modal[hidden] {
+  display: none !important;
+}
+.webcam-sheet {
+  width: min(420px, 100%);
+  background: var(--vanilla);
+  border: 1px solid var(--pastel-gray);
+  border-radius: .85rem;
+  padding: .85rem;
+  display: grid;
+  gap: .65rem;
+}
+.webcam-sheet video {
+  width: 100%;
+  max-height: 55vh;
+  border-radius: .6rem;
+  background: #1a1f1c;
+  object-fit: cover;
+}
+.webcam-actions {
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
 .garment-card {
   position: relative;
   display: flex;

@@ -124,7 +124,15 @@ async def save_upload(photo: Optional[UploadFile]) -> Optional[str]:
         return None
     ext = Path(photo.filename).suffix.lower()
     if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
-        ext = ".jpg"
+        ctype = (photo.content_type or "").lower()
+        if "png" in ctype:
+            ext = ".png"
+        elif "webp" in ctype:
+            ext = ".webp"
+        elif "gif" in ctype:
+            ext = ".gif"
+        else:
+            ext = ".jpg"
     name = f"{uuid.uuid4().hex}{ext}"
     dest = UPLOAD_DIR / name
     data = await photo.read()
@@ -132,6 +140,11 @@ async def save_upload(photo: Optional[UploadFile]) -> Optional[str]:
         return None
     dest.write_bytes(data)
     return name
+
+
+def _photo_source(raw: Optional[str]) -> str:
+    v = (raw or "").strip().lower()
+    return v if v in {"camera", "library"} else ""
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -301,12 +314,14 @@ async def closet_create(
     name: str = Form(...),
     type: str = Form(...),
     photo: Optional[UploadFile] = File(None),
+    photo_source: Optional[str] = Form(None),
 ):
     uid = require_user(request)
     if not name.strip() or not type.strip():
         return RedirectResponse("/closet?error=required", status_code=303)
     photo_name = await save_upload(photo)
-    db.create_item(uid, name, type, photo_name)
+    source = _photo_source(photo_source) if photo_name else ""
+    db.create_item(uid, name, type, photo_name, photo_source=source)
     return RedirectResponse("/closet", status_code=303)
 
 
@@ -340,6 +355,7 @@ async def closet_edit_save(
     type: str = Form(...),
     photo: Optional[UploadFile] = File(None),
     remove_photo: Optional[str] = Form(None),
+    photo_source: Optional[str] = Form(None),
 ):
     uid = require_user(request)
     item = db.get_item(uid, item_id)
@@ -355,6 +371,7 @@ async def closet_edit_save(
     clear = remove_photo == "1"
     new_photo = await save_upload(photo)
     old_photo = item["photo_path"]
+    source = _photo_source(photo_source) if new_photo else ""
     ok = db.update_item(
         uid,
         item_id,
@@ -362,6 +379,7 @@ async def closet_edit_save(
         type,
         photo_path=new_photo,
         clear_photo=clear and not new_photo,
+        photo_source=source,
     )
     if ok and (new_photo or clear) and old_photo:
         path = UPLOAD_DIR / old_photo
